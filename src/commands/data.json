@@ -1,0 +1,4 @@
+[
+  {"type":"text", "content":"hello", "name":"myText", "x":100, "y":"100", "w":100, "h":100 },
+  {"type":"image", "file":"./490.png", "name":"myImage", "x":100, "y":"100", "w":100, "h":100 }
+]
