@@ -2,34 +2,40 @@ const { app } = require("indesign");
 //
 //
 //
-const importFigma = async () => {
+const importFigma = async (path, filename) => {
   // Set up
   var myDocument = app.activeDocument;
-  var myJSON = await readFile();
+  var myJSON = await readFile(path+filename);
   var myJSONData = JSON.parse(myJSON);
 
   // Loop through JSON data
   for(var i = 0; i < myJSONData.length; i++) {
 
     // Create layer
-    var newLayer = myDocument.layers.add();
-    newLayer.name = myJSONData[i].name;
+    // var newLayer = myDocument.layers.add();
+    // newLayer.name = myJSONData[i].name;
 
     // Check if image or text
-    if(myJSONData[i].type == "image") {
+    let entry = myJSONData[i]
+    entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
+    if(entry.type == "image") {
 
       // Place image
-      var imageFile = File(myJSONData[i].file);
-      var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-      newLayer.place(imageFile, imageRect);
+      // var imageFile = File(myJSONData[i].file);
+      // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
+      // newLayer.place(imageFile, imageRect);
+
+      placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
 
     } else if(myJSONData[i].type == "text") {
 
       // Create text
-      var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-      var textFrame = myDocument.pages[0].textFrames.add(textRect);
-      textFrame.contents = myJSONData[i].content;
-      textFrame.parentStory.move(newLayer);
+      // var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
+      // var textFrame = myDocument.pages[0].textFrames.add(textRect);
+      // textFrame.contents = myJSONData[i].content;
+      // textFrame.parentStory.move(newLayer);
+
+      addTextFrame(entry.filename, entry.top, entry.left, entry.width, entry.height);
 
     }
 
@@ -41,11 +47,11 @@ const myJson = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/mySc
 //
 //
 //
-const readFile = async () =>{
+const readFile = async (path) =>{
     // Access other location
     if (fsProvider.isFileSystemProvider) {
       try {
-          const file = await fsProvider.getEntryWithUrl("file:"+myJson); // update the path based on your system
+          const file = await fsProvider.getEntryWithUrl("file:"+path); // update the path based on your system
           console.log(`File path: ${file.nativePath}`);
           const text = await file.read();
             console.log(`File content: ${text}`);
@@ -57,16 +63,16 @@ const readFile = async () =>{
   }
 }
 
-const myImagePath = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/react-starter/src/commands/490.png";
+//const path = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/react-starter/src/commands/490.png";
 //
 //
 //
-const placeGraphic = () =>{
+const placeGraphic = (path, top, left,width, height ) =>{
+
   const { FitOptions, TextWrapModes } =  require("indesign");
   var myDocument = app.activeDocument;
-
   //Display a standard open file dialog box to select a graphic file.
-   let myGraphicFile = "file:" + myImagePath;
+   let myGraphicFile = "file:" + path;
   //Example : let myGraphicFile = "C://IDS/myImage.PNG";
    //If a graphic file was selected, and if you didn't press Cancel,
   //place the graphic file on the page.
@@ -94,7 +100,7 @@ const placeGraphic = () =>{
       let myFrame = myGraphic.parent;
       myFrame.applyObjectStyle(myObjectStyle, true);
       //Resize the frame to a specific size.
-      myFrame.geometricBounds = [0,0,144,144];
+      myFrame.geometricBounds =[top, left, top+height, left+ width]; // [0,0,144,144];
       //Fit the graphic to the frame proportionally.
       myFrame.fit(FitOptions.proportionally);
       //Next, fit frame to the resized graphic.
@@ -105,6 +111,7 @@ const placeGraphic = () =>{
       let myPageWidth = myDocument.documentPreferences.pageWidth;
       let myTopMargin = myDocument.pages.item(0).marginPreferences.top;
       myFrame.move([myPageWidth-myGraphicWidth, myTopMargin]);
+
       //Apply a text wrap to the graphic frame.
       myFrame.textWrapPreferences.textWrapMode = TextWrapModes.BOUNDING_BOX_TEXT_WRAP;
       myFrame.textWrapPreferences.textWrapOffset = [24, 12, 24, 12];
@@ -114,22 +121,27 @@ const placeGraphic = () =>{
 //
 //
 //
-const addTextFrame = () =>{
+const addTextFrame = (filename, top, left, width, height) =>{
   const { FirstBaseline } =  require("indesign");
   var myDocument = app.activeDocument;
   let myMasterSpread = myDocument.masterSpreads.item(0);
 
   let myLeftPage = myMasterSpread.pages.item(0);
-  let myRightPage = myMasterSpread.pages.item(1);
+  //let myRightPage = myMasterSpread.pages.item(1);
+
   let myLeftTextFrame = myLeftPage.textFrames.add();
-  myLeftTextFrame.geometricBounds = [3, 3, 25, 43];
+  myLeftTextFrame.geometricBounds = [top, left, top+height, left+ width];//[3, 3, 25, 43];
   myLeftTextFrame.textFramePreferences.firstBaselineOffset = FirstBaseline.leadingOffset;
   myLeftTextFrame.textFramePreferences.textColumnCount = 3;
   myLeftTextFrame.textFramePreferences.textColumnGutter = 14;
   //Add a label to make the frame easier to find later on.
-  myLeftTextFrame.label = "BodyTextFrame";
+  myLeftTextFrame.label = filename; //"BodyTextFrame";
+  myTextFrame.insertionPoints.item(0).contents = filename;
+
+
+  /*
   let myRightTextFrame = myRightPage.textFrames.add();
-  myRightTextFrame.geometricBounds = [3, 54, 25, 91];
+  myRightTextFrame.geometricBounds = [top, left, top+height, left+ width]]; //[3, 54, 25, 91];
   myRightTextFrame.textFramePreferences.firstBaselineOffset = FirstBaseline.leadingOffset;
   myRightTextFrame.textFramePreferences.textColumnCount = 3;
   myRightTextFrame.textFramePreferences.textColumnGutter = 14;
@@ -137,7 +149,7 @@ const addTextFrame = () =>{
   myRightTextFrame.label = "BodyTextFrame";
   //Link the two frames using the nextTextFrame property.
   myLeftTextFrame.nextTextFrame = myRightTextFrame;
-
+  */
 }
 
 //

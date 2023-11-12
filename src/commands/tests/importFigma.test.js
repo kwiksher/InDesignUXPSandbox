@@ -34,6 +34,9 @@ describe.skip('sum', () => {
 const importFigma = require("../importFigma.js")
 const AddPoints = require("../AddPoints.idjs")
 
+const path = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/InDesignUXPSandbox/src/commands/tests/images/";
+const filename = "frame_se_flashcard_treatment_for_InDesign.json"
+
 describe('import from figma', () => {
 
   it.skip('add points', async () => {
@@ -42,7 +45,7 @@ describe('import from figma', () => {
 
 
   it.skip('readfile', async () => {
-    const ret = await importFigma.readFile();
+    const ret = await importFigma.readFile(path+filename);
     console.log(ret)
   });
 
@@ -50,20 +53,20 @@ describe('import from figma', () => {
     importFigma.masterSpreads();
   });
 
-  it('addTextFrame', () => {
-    importFigma.addTextFrame();
+  it.skip('addTextFrame', () => {
+    importFigma.addTextFrame("01-2.png", 100, 100, 100, 100);
   });
 
-  it('add Text', () => {
+  it.skip('add Text', () => {
     importFigma.addText("Headline!\r");
   });
 
   it.skip('placeGraphic', () => {
-    importFigma.placeGraphic();
+    importFigma.placeGraphic(path+"01-2.png", 200, 200, 100, 100);
   });
 
-  it.skip('import Figma', () => {
-    importFigma.importFigma();
+  it('import Figma', () => {
+    importFigma.importFigma(path, filename);
   });
 
 });
