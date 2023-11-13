@@ -18,16 +18,17 @@ const importFigma = async (path, filename) => {
     // Check if image or text
     let entry = myJSONData[i]
     entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
+    console.log(entry.filename, entry.type, entry.filename.indexOf("_IdT"));
     if(entry.type == "image") {
 
-      // Place image
-      // var imageFile = File(myJSONData[i].file);
-      // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-      // newLayer.place(imageFile, imageRect);
+    // Place image
+    // var imageFile = File(myJSONData[i].file);
+    // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
+    // newLayer.place(imageFile, imageRect);
 
-      placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
+    placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
 
-    } else if(myJSONData[i].type == "text") {
+    } else if(entry.type == "text") {
 
       // Create text
       // var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
@@ -105,23 +106,21 @@ const placeGraphic = (path, top, left,width, height ) =>{
       myFrame.fit(FitOptions.proportionally);
       //Next, fit frame to the resized graphic.
       myFrame.fit(FitOptions.frameToContent);
-      let myBounds = myFrame.geometricBounds;
-      let myGraphicWidth = myBounds[3]-myBounds[1];
+
       //Move the graphic frame.
-      let myPageWidth = myDocument.documentPreferences.pageWidth;
-      let myTopMargin = myDocument.pages.item(0).marginPreferences.top;
-      myFrame.move([myPageWidth-myGraphicWidth, myTopMargin]);
+      // let myBounds = myFrame.geometricBounds;
+      // let myGraphicWidth = myBounds[3]-myBounds[1];
+      // let myPageWidth = myDocument.documentPreferences.pageWidth;
+      // let myTopMargin = myDocument.pages.item(0).marginPreferences.top;
+      // myFrame.move([myPageWidth-myGraphicWidth, myTopMargin]);
 
       //Apply a text wrap to the graphic frame.
-      myFrame.textWrapPreferences.textWrapMode = TextWrapModes.BOUNDING_BOX_TEXT_WRAP;
-      myFrame.textWrapPreferences.textWrapOffset = [24, 12, 24, 12];
+      // myFrame.textWrapPreferences.textWrapMode = TextWrapModes.BOUNDING_BOX_TEXT_WRAP;
+      // myFrame.textWrapPreferences.textWrapOffset = [24, 12, 24, 12];
   }
 }
 
-//
-//
-//
-const addTextFrame = (filename, top, left, width, height) =>{
+const addTextFrameMasterSpread = (filename, top, left, width, height) =>{
   const { FirstBaseline } =  require("indesign");
   var myDocument = app.activeDocument;
   let myMasterSpread = myDocument.masterSpreads.item(0);
@@ -131,9 +130,9 @@ const addTextFrame = (filename, top, left, width, height) =>{
 
   let myLeftTextFrame = myLeftPage.textFrames.add();
   myLeftTextFrame.geometricBounds = [top, left, top+height, left+ width];//[3, 3, 25, 43];
-  myLeftTextFrame.textFramePreferences.firstBaselineOffset = FirstBaseline.leadingOffset;
-  myLeftTextFrame.textFramePreferences.textColumnCount = 3;
-  myLeftTextFrame.textFramePreferences.textColumnGutter = 14;
+   myLeftTextFrame.textFramePreferences.firstBaselineOffset = FirstBaseline.leadingOffset;
+  // myLeftTextFrame.textFramePreferences.textColumnCount = 3;
+  // myLeftTextFrame.textFramePreferences.textColumnGutter = 14;
   //Add a label to make the frame easier to find later on.
   myLeftTextFrame.label = filename; //"BodyTextFrame";
   myTextFrame.insertionPoints.item(0).contents = filename;
@@ -150,6 +149,25 @@ const addTextFrame = (filename, top, left, width, height) =>{
   //Link the two frames using the nextTextFrame property.
   myLeftTextFrame.nextTextFrame = myRightTextFrame;
   */
+}
+
+//
+//
+//
+const addTextFrame = (filename, top, left, width, height) =>{
+  const { FirstBaseline } =  require("indesign");
+  var myDocument = app.activeDocument;
+  let myPage = myDocument.pages.item(0);
+  let myTextFrame = myPage.textFrames.add();
+  myTextFrame.geometricBounds = [top, left, top+height, left+ width];//[3, 3, 25, 43];
+  //myTextFrame.textFramePreferences.firstBaselineOffset = FirstBaseline.leadingOffset;
+  // myTextFrame.textFramePreferences.textColumnCount = 3;
+  // myTextFrame.textFramePreferences.textColumnGutter = 14;
+
+  //Add a label to make the frame easier to find later on.
+  myTextFrame.label = filename; //"BodyTextFrame";
+  myTextFrame.insertionPoints.item(0).contents = filename;
+
 }
 
 //
