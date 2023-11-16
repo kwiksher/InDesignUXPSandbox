@@ -14,58 +14,27 @@ const isImageExist = async (path, name) => {
 //
 const importFigma = async (path, filename) => {
   // Set up
-  var myDocument = app.activeDocument;
   var myJSONData = await readFile(path+filename);
-
-  //var myJSON     = await readFileSimple(path+filename);
-  //var myJSONData = JSON.parse(myJSON);
-
   // Loop through JSON data
+  console.log("#", myJSONData.length)
   for(var i = 0; i < myJSONData.length; i++) {
-
     // Create layer
-    // var newLayer = myDocument.layers.add();
-    // newLayer.name = myJSONData[i].name;
-
-    // Check if image or text
     let entry = myJSONData[i];
-    entry.filename = name;
-    //
-    // TBI if image file exists, we place it to InDesign
-    //
-    // if (isImageExist(path, entry.filename)){
-    //
-    if (entry.hasOwnProperty('exportSettings') && entry.exportSettings.length > 0 ){
-
-      entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
-      console.log(entry.filename, entry.type, entry.filename.indexOf("_IdT"));
-      if(entry.type == "image") {
-
+    entry.filename = entry.name + ((entry.format=="PNG")?".png":".jpg");
+    entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
+    // console.log(entry.filename, entry.type, entry.filename.indexOf("_IdT"));
+    if(entry.type == "image") {
       // Place image
-      // var imageFile = File(myJSONData[i].file);
-      // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-      // newLayer.place(imageFile, imageRect);
-
       placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
-
-      } else if(entry.type == "text") {
-
-        // Create text
-        // var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-        // var textFrame = myDocument.pages[0].textFrames.add(textRect);
-        // textFrame.contents = myJSONData[i].content;
-        // textFrame.parentStory.move(newLayer);
-
-        addTextFrame(entry.filename, entry.top, entry.left, entry.width, entry.height);
-
-      }
+    } else if(entry.type == "text") {
+      // Create text
+      addTextFrame(entry.filename, entry.top, entry.left, entry.width, entry.height);
     }
   }
 }
 
 const fsProvider = require('uxp').storage.localFileSystem;
 const myJson = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/react-starter/src/commands/data.json";
-//
 //
 //
 const readFileSimple = async (path) =>{
@@ -135,6 +104,9 @@ const readFile = async (path) =>{
               data.top = entry.style.y
               data.width = entry.style.absoluteBoundingBox.width
               data.height = entry.style.absoluteBoundingBox.height
+              if(entry.style.exportSettings.length > 0 ){
+                data.format = entry.style.exportSettings[0].format;
+              }
               result.push(data);
             }
             if (entry.hasOwnProperty('children') && entry.children.length > 0){
@@ -166,6 +138,7 @@ const placeGraphic = (path, top, left,width, height ) =>{
   //Example : let myGraphicFile = "C://IDS/myImage.PNG";
    //If a graphic file was selected, and if you didn't press Cancel,
   //place the graphic file on the page.
+  console.log(myGraphicFile)
   if((myGraphicFile != "")&&(myGraphicFile != null)){
       let myGraphic = myDocument.pages.item(0).place(myGraphicFile);
       //Since you can place multiple graphics at once, the place method

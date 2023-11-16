@@ -45,7 +45,7 @@ describe('import from figma', () => {
   });
 
 
-  it('readfile', async () => {
+  it.skip('readfile', async () => {
     const ret = await importFigma.readFile(path+filename);
 
     // {
@@ -81,7 +81,7 @@ describe('import from figma', () => {
     importFigma.placeGraphic(path+"01-2.png", 200, 200, 100, 100);
   });
 
-  it.skip('import Figma', () => {
+  it('import Figma', () => {
     importFigma.importFigma(path, filename);
   });
 
