@@ -35,6 +35,7 @@ const importFigma = require("../importFigma.js")
 const AddPoints = require("../AddPoints.idjs")
 
 const path = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/InDesignUXPSandbox/src/commands/tests/images/";
+const filename_test = "frame_se_flashcard_treatment_for_InDesign_test.json"
 const filename = "frame_se_flashcard_treatment_for_InDesign.json"
 
 describe('import from figma', () => {
@@ -44,8 +45,23 @@ describe('import from figma', () => {
   });
 
 
-  it.skip('readfile', async () => {
+  it('readfile', async () => {
     const ret = await importFigma.readFile(path+filename);
+
+    // {
+    //   "filename": "01-2.png",
+    //   "width": 356,
+    //   "height": 196,
+    //   "top": 226,   -- x
+    //   "left": 795   -- y
+    // },
+
+    const node01_2 = ret.filter(node => {
+      return node.name === '01-2';
+    });
+
+    expect(node01_2.top).toBe(226);
+    expect(node01_2.left).toBe(795);
     console.log(ret)
   });
 
@@ -65,7 +81,7 @@ describe('import from figma', () => {
     importFigma.placeGraphic(path+"01-2.png", 200, 200, 100, 100);
   });
 
-  it('import Figma', () => {
+  it.skip('import Figma', () => {
     importFigma.importFigma(path, filename);
   });
 

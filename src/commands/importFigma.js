@@ -1,12 +1,24 @@
 const { app } = require("indesign");
 //
 //
+const isImageExist = async (path, name) => {
+  try {
+     const folder = await fsProvider.getEntryWithUrl(path); // update the path based on your system
+     const file = await folder.getEntry(name); // update the path based on your system
+     return file.isFile
+  }catch(fileError) {
+    return false
+  }
+}
+
 //
 const importFigma = async (path, filename) => {
   // Set up
   var myDocument = app.activeDocument;
-  var myJSON = await readFile(path+filename);
-  var myJSONData = JSON.parse(myJSON);
+  var myJSONData = await readFile(path+filename);
+
+  //var myJSON     = await readFileSimple(path+filename);
+  //var myJSONData = JSON.parse(myJSON);
 
   // Loop through JSON data
   for(var i = 0; i < myJSONData.length; i++) {
@@ -16,30 +28,38 @@ const importFigma = async (path, filename) => {
     // newLayer.name = myJSONData[i].name;
 
     // Check if image or text
-    let entry = myJSONData[i]
-    entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
-    console.log(entry.filename, entry.type, entry.filename.indexOf("_IdT"));
-    if(entry.type == "image") {
+    let entry = myJSONData[i];
+    entry.filename = name;
+    //
+    // TBI if image file exists, we place it to InDesign
+    //
+    // if (isImageExist(path, entry.filename)){
+    //
+    if (entry.hasOwnProperty('exportSettings') && entry.exportSettings.length > 0 ){
 
-    // Place image
-    // var imageFile = File(myJSONData[i].file);
-    // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-    // newLayer.place(imageFile, imageRect);
+      entry.type = entry.filename.indexOf("_IdT") > 0?"text":"image";
+      console.log(entry.filename, entry.type, entry.filename.indexOf("_IdT"));
+      if(entry.type == "image") {
 
-    placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
+      // Place image
+      // var imageFile = File(myJSONData[i].file);
+      // var imageRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
+      // newLayer.place(imageFile, imageRect);
 
-    } else if(entry.type == "text") {
+      placeGraphic(path+entry.filename, entry.top, entry.left, entry.width, entry.height);
 
-      // Create text
-      // var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
-      // var textFrame = myDocument.pages[0].textFrames.add(textRect);
-      // textFrame.contents = myJSONData[i].content;
-      // textFrame.parentStory.move(newLayer);
+      } else if(entry.type == "text") {
 
-      addTextFrame(entry.filename, entry.top, entry.left, entry.width, entry.height);
+        // Create text
+        // var textRect = [myJSONData[i].x, myJSONData[i].y, myJSONData[i].w, myJSONData[i].h];
+        // var textFrame = myDocument.pages[0].textFrames.add(textRect);
+        // textFrame.contents = myJSONData[i].content;
+        // textFrame.parentStory.move(newLayer);
 
+        addTextFrame(entry.filename, entry.top, entry.left, entry.width, entry.height);
+
+      }
     }
-
   }
 }
 
@@ -48,7 +68,15 @@ const myJson = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/mySc
 //
 //
 //
-const readFile = async (path) =>{
+const readFileSimple = async (path) =>{
+    // {
+    //   "filename": "01-2.png",
+    //   "width": 356,
+    //   "height": 196,
+    //   "top": 226,   -- x
+    //   "left": 795   -- y
+    // },
+
     // Access other location
     if (fsProvider.isFileSystemProvider) {
       try {
@@ -62,6 +90,67 @@ const readFile = async (path) =>{
           console.error(e);
       }
   }
+}
+
+const readFile = async (path) =>{
+  // need to interate children
+  // {
+  //   "id": "269:76966",
+  //   "name": "01-2",
+  //   "type": "GROUP",
+  //   "visible": true,
+  //   "locked": false,
+  //   "style": {
+  //     "blendMode": "PASS_THROUGH",
+  //     "opacity": 1,
+  //     "effects": [],
+  //     "x": 795,
+  //     "y": 226,
+  //     "absoluteBoundingBox": {
+  //       "x": -14302,
+  //       "y": 1843,
+  //       "width": 356,
+  //       "height": 196
+  //     }
+  //   },
+  //   "children": [
+  //     {}
+
+  let result = [];
+  // Access other location
+  if (fsProvider.isFileSystemProvider) {
+    try {
+        const file = await fsProvider.getEntryWithUrl("file:"+path); // update the path based on your system
+        console.log(`File path: ${file.nativePath}`);
+        const text = await file.read();
+        const myJSONData = JSON.parse(text);
+        //
+        const parser = (node)=>{
+          //console.log(node.children); // node.children.length)
+          node.children.forEach((entry) =>{
+            let data = {};
+            if(entry.style.hasOwnProperty('exportSettings') && entry.style.exportSettings.length>0){
+              data.name = entry.name
+              data.left = entry.style.x
+              data.top = entry.style.y
+              data.width = entry.style.absoluteBoundingBox.width
+              data.height = entry.style.absoluteBoundingBox.height
+              result.push(data);
+            }
+            if (entry.hasOwnProperty('children') && entry.children.length > 0){
+              parser(entry)
+            }
+          })
+        }
+        //
+        parser(myJSONData);
+        console.log(JSON.stringify(result));
+        return result;
+
+    } catch (e) {
+        console.error(e);
+    }
+}
 }
 
 //const path = "/Users/ymmtny/Documents/GitHub/InDesignFigmaSample/InDesign/myScript/react-starter/src/commands/490.png";
